@@ -11,9 +11,9 @@ var requireFromJson = function (rootPath, file, fallback) {
   fs.readFile(file, (err, data) => {
     try {
       if (err) throw err
-      var obj = JSON.parse(data)
-      if (obj = []) throw new Error('file empty')
-      console.log(obj)
+      var files = JSON.parse(data)
+      if (files = []) throw new Error('file empty')
+      loadFilesFromList(rootPath, files)
     }
     catch (e) {
       fallback(rootPath)
@@ -22,18 +22,28 @@ var requireFromJson = function (rootPath, file, fallback) {
 }
 
 var requireFromDir = function (rootPath) {
-  fs.readdirSync(`${rootPath}/scripts`).forEach((file) => {
-    if (file.match('.js$')) {
-      let fileName = `/scripts/${file}`
-      console.log(`Loading ${fileName}...`)
+  fs.readdir(`${rootPath}/scripts`, (err, files) => {
+    if (err) throw err
+    files = files.filter(file => file.match('.js$'))
+    loadFilesFromList(rootPath, files)
+  })
+}
+
+var loadFilesFromList = function (rootPath, list) {
+  // This will take in a list of file names without extensions and try to require them
+  list.forEach(
+    file => {
+      let fileName = `${file}`
       try {
-        require(rootPath + fileName)
+        require(`${rootPath}/scripts/${fileName}`)
+        console.log(`Loaded: ${fileName}`)
       }
       catch (e) {
-        console.log(`require(): The file ${fileName} couldn't be loaded`)
+        console.log(`Did not load: ${fileName}`)
+        console.log(e)
       }
     }
-  })
+  )
 }
 
 module.exports = loadScripts
